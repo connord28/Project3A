@@ -166,6 +166,28 @@ int main(int argc, char** argv)
             printf(",%d", inode.i_block[k]);
          }
          printf("\n");
+
+
+         //print directory entries
+         struct ext2_dir_entry* entry = (struct ext2_dir_entry*) malloc(sizeof(struct ext2_dir_entry));
+         if(fileType=='d'){
+            for(unsigned int k = 0; k<12 && inode.i_block[k]!=0; k++){
+               unsigned int offset = 0;
+               while(offset<blockSize){
+                  if(pread(fd, entry, sizeof(struct ext2_dir_entry), inode.i_block[k] *blockSize + offset) <0)
+                  {
+                     fprintf(stderr, "Error when doing preads\n");
+                     exit(2);
+                  }
+                  unsigned int entry_len = entry->rec_len;
+                  if(entry->inode !=0){
+                     fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,\'%s\'\n", j+1, offset, entry->inode, entry_len, entry->name_len, entry->name );
+                  }
+                  offset += entry_len;
+               }
+             }
+         }
+
       }
 
    }
