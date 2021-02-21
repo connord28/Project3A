@@ -69,10 +69,10 @@ int main(int argc, char** argv)
    numBlocks =  super.s_blocks_count;
    //printf("#b=%d\n", numBlocks);
    inodeCount = super.s_inodes_count;
-   printf("SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n", numBlocks, inodeCount, inodeSize, blocksPerGroup, super.s_first_ino);
-   fragsPerGroup = super.s_frags_per_group;
    inodesPerGroup = super.s_inodes_per_group;
-   blockSize = 1024 << super.s_log_block_size; 
+   blockSize = 1024 << super.s_log_block_size;
+   printf("SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n", numBlocks, inodeCount, blockSize, inodeSize, blocksPerGroup, inodesPerGroup, super.s_first_ino);
+   fragsPerGroup = super.s_frags_per_group; 
    fragSize = 1024 << super.s_log_frag_size;
 
    //group part
@@ -210,15 +210,16 @@ int main(int argc, char** argv)
    
          }
          //single indirect
-         
+         unsigned int* block_nums = (unsigned int *)malloc(blockSize);
+         unsigned int* block_nums2 = (unsigned int *)malloc(blockSize);
+         unsigned int* block_nums3 = (unsigned int *)malloc(blockSize);
          if(inode.i_block[12]!=0){
-            unsigned int* block_nums = (unsigned int *)malloc(blockSize);
             if(pread(fd, block_nums, blockSize, inode.i_block[12] *blockSize) <0)
                {
                   fprintf(stderr, "Error when doing preads\n");
                   exit(2);
                }
-            for(int k = 0; k<blockSize/4; k++){
+            for(unsigned int k = 0; k<blockSize/4; k++){
                if(block_nums[k]==0)
                   continue;
                if(fileType=='d'){
@@ -226,12 +227,75 @@ int main(int argc, char** argv)
                }
                fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 1, 12 + k, inode.i_block[12], block_nums[k] );
             }
+            free(block_nums);
          }
+         //unsigned int* block_nums = (unsigned int *)malloc(blockSize);
 
          //double indirect
+          if(inode.i_block[13]!=0){
+            if(pread(fd, block_nums, blockSize, inode.i_block[13] *blockSize) <0)
+               {
+                  fprintf(stderr, "Error when doing preads\n");
+                  exit(2);
+               }
+            for(unsigned int k = 0; k<blockSize/4; k++){
+               if(block_nums[k]==0)
+                  continue;
+               fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 2, 12 + 256 + k*256, inode.i_block[13], block_nums[k] );
+               //unsigned int* block_nums2 = (unsigned int *)malloc(blockSize);
+               if(pread(fd, block_nums2, blockSize, block_nums[k] *blockSize) <0)
+               {
+                  fprintf(stderr, "Error when doing preads\n");
+                  exit(2);
+               }
+               for(unsigned int l = 0; l<blockSize/4; l++){
+                  if(block_nums2[l]==0)
+                     continue;
+                  if(fileType=='d'){
+                     print_Dir_Entries(j+1, blockSize*block_nums2[l]);
+                  }
+                  fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 1, 12 + 256+(k*256)+l, block_nums[k], block_nums2[l] );
+               }
+            }
+         }
 
          //tripple indirect
-
+         if(inode.i_block[14]!=0){
+            if(pread(fd, block_nums, blockSize, inode.i_block[14] *blockSize) <0)
+               {
+                  fprintf(stderr, "Error when doing preads\n");
+                  exit(2);
+               }
+            for(unsigned int k = 0; k<blockSize/4; k++){
+               if(block_nums[k]==0)
+                  continue;
+               fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 3, 12 + 256 + 256*256 + k*256*256, inode.i_block[14], block_nums[k] );
+               //unsigned int* block_nums2 = (unsigned int *)malloc(blockSize);
+               if(pread(fd, block_nums2, blockSize, block_nums[k] *blockSize) <0)
+               {
+                  fprintf(stderr, "Error when doing preads\n");
+                  exit(2);
+               } 
+               for(unsigned int l = 0; l<blockSize/4; l++){
+                  if(block_nums2[l]==0)
+                  continue;
+                  fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 2, 12 + 256 + 256*256 + k*256*256 + l*256, block_nums[k], block_nums2[l] );
+                  if(pread(fd, block_nums3, blockSize, block_nums2[l] *blockSize) <0)
+                  {
+                     fprintf(stderr, "Error when doing preads\n");
+                     exit(2);
+                  }
+                  for(unsigned int m = 0; m<blockSize/4; m++){
+                     if(block_nums3[m]==0)
+                        continue;
+                     if(fileType=='d'){
+                        print_Dir_Entries(j+1, blockSize*block_nums3[m]);
+                     }
+                     fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 1, 12 + 256 + 256*256 + k*256*256 + l*256 + m, block_nums2[l], block_nums3[m] );
+                  }
+               }
+            }
+         }
       }
 
    }
