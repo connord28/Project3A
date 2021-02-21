@@ -40,7 +40,7 @@ void getTime(unsigned int t, char* buff)
 
 int main(int argc, char** argv)
 {
-   unsigned int inodeCount= 0, numBlocks= 0, blocksPerGroup = 0, inodeSize = 0, fragsPerGroup = 0, fragSize = 0, inodesPerGroup = 0;
+   unsigned int inodeCount= 0, numBlocks= 0, blocksPerGroup = 0, inodeSize = 0, inodesPerGroup = 0;
    struct ext2_super_block super;
 
    if(argc != 2)
@@ -72,15 +72,15 @@ int main(int argc, char** argv)
    inodesPerGroup = super.s_inodes_per_group;
    blockSize = 1024 << super.s_log_block_size;
    printf("SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n", numBlocks, inodeCount, blockSize, inodeSize, blocksPerGroup, inodesPerGroup, super.s_first_ino);
-   fragsPerGroup = super.s_frags_per_group; 
-   fragSize = 1024 << super.s_log_frag_size;
+   //fragsPerGroup = super.s_frags_per_group; 
+   //fragSize = 1024 << super.s_log_frag_size;
 
    //group part
    //maybe make a function for each part of this like the github's do
-   int numGroups = numBlocks / blocksPerGroup;
+   unsigned int numGroups = numBlocks / blocksPerGroup;
    unsigned int gBlocks = blocksPerGroup, gInodes = inodesPerGroup;
    //printf("#g=%d\n", numGroups);
-   for(int i = 0; i <= numGroups; i++)
+   for(unsigned int i = 0; i <= numGroups; i++)
    {
       struct ext2_group_desc group;
       
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
          exit(2);
       }
       //fprintf(stderr, "bits[0]=%d\n", bits[0]);
-      for(int j = 1; j <= gBlocks; j++)
+      for(unsigned int j = 1; j <= gBlocks; j++)
       {
          //fprintf(stderr, "ASS=%d\n", blockSize);
          int index = 0, offset = 0;
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
          fprintf(stderr, "Error when doing preads\n");
          exit(2);
       }
-      for(int j = 1; j <= gInodes; j++)
+      for(unsigned int j = 1; j <= gInodes; j++)
       {
          int index = 0, offset = 0;
          index = (j-1)/8;  //which byte within the bitmap stores the info of this block# 
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
          fprintf(stderr, "Error when doing preads\n");
          exit(2);
       }
-      for(int j = 0; j < gInodes; j++)
+      for(unsigned int j = 0; j < gInodes; j++)
       {
          struct ext2_inode inode = inodes[j];
          unsigned int mode = inode.i_mode;
