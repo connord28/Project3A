@@ -9,6 +9,26 @@
 #include <time.h>
 
 #include "ext2_fs.h"
+unsigned int blockSize= 0;
+int fd = 0;
+
+void print_Dir_Entries( unsigned int inode_num, unsigned int start_pos){
+   struct ext2_dir_entry* entry = (struct ext2_dir_entry*) malloc(sizeof(struct ext2_dir_entry));
+   unsigned int offset = 0;
+   while(offset<blockSize){
+      if(pread(fd, entry, sizeof(struct ext2_dir_entry), start_pos + offset) <0)
+      {
+         fprintf(stderr, "Error when doing preads\n");
+         exit(2);
+      }
+      unsigned int entry_len = entry->rec_len;
+      if(entry->inode !=0){
+         fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,\'%s\'\n", inode_num, offset, entry->inode, entry_len, entry->name_len, entry->name );
+      }
+      offset += entry_len;
+   }
+   free(entry);
+}
 
 void getTime(unsigned int t, char* buff)
 {
@@ -20,8 +40,7 @@ void getTime(unsigned int t, char* buff)
 
 int main(int argc, char** argv)
 {
-   int fd = 0;
-   unsigned int inodeCount= 0, numBlocks= 0, blockSize= 0, blocksPerGroup = 0, inodeSize = 0, fragsPerGroup = 0, fragSize = 0, inodesPerGroup = 0;
+   unsigned int inodeCount= 0, numBlocks= 0, blocksPerGroup = 0, inodeSize = 0, fragsPerGroup = 0, fragSize = 0, inodesPerGroup = 0;
    struct ext2_super_block super;
 
    if(argc != 2)
@@ -169,9 +188,11 @@ int main(int argc, char** argv)
 
 
          //print directory entries
-         struct ext2_dir_entry* entry = (struct ext2_dir_entry*) malloc(sizeof(struct ext2_dir_entry));
+         //struct ext2_dir_entry* entry = (struct ext2_dir_entry*) malloc(sizeof(struct ext2_dir_entry));
          if(fileType=='d'){
             for(unsigned int k = 0; k<12 && inode.i_block[k]!=0; k++){
+               print_Dir_Entries(j+1, inode.i_block[k] *blockSize);
+               /*
                unsigned int offset = 0;
                while(offset<blockSize){
                   if(pread(fd, entry, sizeof(struct ext2_dir_entry), inode.i_block[k] *blockSize + offset) <0)
@@ -184,9 +205,32 @@ int main(int argc, char** argv)
                      fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,\'%s\'\n", j+1, offset, entry->inode, entry_len, entry->name_len, entry->name );
                   }
                   offset += entry_len;
-               }
-             }
+               }*/
+            }
+   
          }
+         //single indirect
+         
+         if(inode.i_block[12]!=0){
+            unsigned int* block_nums = (unsigned int *)malloc(blockSize);
+            if(pread(fd, block_nums, blockSize, inode.i_block[12] *blockSize) <0)
+               {
+                  fprintf(stderr, "Error when doing preads\n");
+                  exit(2);
+               }
+            for(int k = 0; k<blockSize/4; k++){
+               if(block_nums[k]==0)
+                  continue;
+               if(fileType=='d'){
+                  print_Dir_Entries(j+1, blockSize*block_nums[k]);
+               }
+               fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 1, 12 + k, inode.i_block[12], block_nums[k] );
+            }
+         }
+
+         //double indirect
+
+         //tripple indirect
 
       }
 
@@ -196,3 +240,4 @@ int main(int argc, char** argv)
    
    return 0;
 }
+
