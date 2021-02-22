@@ -1,5 +1,6 @@
-
-
+// NAME: Connor Daly, Ryan Daly
+// EMAIL: connord2838@gmail.com, ryand3031@ucla.edu
+// ID: 305416912, 505416119
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
