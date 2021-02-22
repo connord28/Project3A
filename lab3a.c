@@ -298,9 +298,9 @@ int main(int argc, char** argv)
             free(block_nums);
             free(block_nums2);
             free(block_nums3);
-
       }
-
+      free(bits);
+      free(inodes);
    }
 
 
