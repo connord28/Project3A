@@ -21,9 +21,15 @@ void print_Dir_Entries( unsigned int inode_num, unsigned int start_pos){
          fprintf(stderr, "Error when doing preads\n");
          exit(2);
       }
+      char name[256];
+      for(unsigned int i = 0; i< entry->name_len; i++){
+         name[i] = entry->name[i];
+      }
+      name[entry->name_len] = '\0';
+
       unsigned int entry_len = entry->rec_len;
       if(entry->inode !=0){
-         fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,\'%s\'\n", inode_num, offset, entry->inode, entry_len, entry->name_len, entry->name );
+         fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,\'%s\'\n", inode_num, offset, entry->inode, entry_len, entry->name_len, name );
       }
       offset += entry_len;
    }
