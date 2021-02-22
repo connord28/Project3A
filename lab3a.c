@@ -227,7 +227,6 @@ int main(int argc, char** argv)
                }
                fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n", j+1, 1, 12 + k, inode.i_block[12], block_nums[k] );
             }
-            free(block_nums);
          }
          //unsigned int* block_nums = (unsigned int *)malloc(blockSize);
 
@@ -296,6 +295,10 @@ int main(int argc, char** argv)
                }
             }
          }
+            free(block_nums);
+            free(block_nums2);
+            free(block_nums3);
+
       }
 
    }
