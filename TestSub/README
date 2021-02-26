@@ -1,0 +1,15 @@
+NAME: Connor Daly, Ryan Daly
+EMAIL: connord2838@gmail.com, ryand3031@ucla.edu
+ID: 305416912, 505416119
+
+CS 111 Project 3A Submission:
+Include Files:
+   lab3a.c - C program to analyze a given file system image and produce a CSV summary of what it finds
+   ext2_fs.h - the provided simplified version of the Linux header file that defines the format of the EXT2 file system
+   Makefile - A makefile with the following targets
+      build (default): compiles lab3a.c to get the lab3a executable
+      dist: creates the ditribution tarball
+      clean: removes all the files created by the Makefile
+   README - This file
+
+Research Sources: We used man7.com, opengroup.org, nongnu.org, and tutorialspoint.com to research for this project. We also used the TA discussion slides from this class.
